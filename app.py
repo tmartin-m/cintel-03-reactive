@@ -73,8 +73,6 @@ def server(input, output, session):
 
     @reactive.calc
     def filtered_data():
-        df = penguins_df.dropna(subset=[input.selected_attribute()])
-        df = df[df["species"].isin(input.selected_species_list())]
         return df
 
     @output
