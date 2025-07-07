@@ -1,5 +1,5 @@
 import plotly.express as px
-from shiny import App, ui, render
+from shiny import App, ui, render, reactive
 from shinywidgets import output_widget, render_widget
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -62,15 +62,30 @@ app_ui = ui.page_fluid(
 # Define Server
 def server(input, output, session):
 
+# --------------------------------------------------------
+# Reactive calculations and effects
+# --------------------------------------------------------
+
+# Add a reactive calculation to filter the data
+# By decorating the function with @reactive, we can use the function to filter the data
+# The function will be called whenever an input functions used to generate that output changes.
+# Any output that depends on the reactive function (e.g., filtered_data()) will be updated when the data changes.
+
+    @reactive.calc
+    def filtered_data():
+        df = penguins_df.dropna(subset=[input.selected_attribute()])
+        df = df[df["species"].isin(input.selected_species_list())]
+        return df
+
     @output
     @render.data_frame
     def penguin_data_table():
-        return render.DataTable(penguins_df, filters=True)
+        return render.DataTable(penguins_df)
 
     @output
     @render.data_frame
     def penguin_data_grid():
-        return render.DataGrid(penguins_df, filters=True)
+        return render.DataGrid(penguins_df)
 
     @output
     @render_widget
