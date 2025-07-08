@@ -80,18 +80,18 @@ def server(input, output, session):
     @output
     @render.data_frame
     def penguin_data_table():
-        return render.DataTable(penguins_df)
+        return render.DataTable(data=filtered_data())
 
     @output
     @render.data_frame
     def penguin_data_grid():
-        return render.DataGrid(penguins_df)
-
+        return render.DataGrid(data=filtered_data())
+        
     @output
     @render_widget
     def plotly_histogram():
         fig = px.histogram(
-            penguins_df,
+            data_frame=filtered_data(),
             x=input.selected_attribute(),
             color="species",
             barmode="overlay",
@@ -104,30 +104,31 @@ def server(input, output, session):
     @render.plot
     def seaborn_hist():
         plt.figure(figsize=(8, 4))
-        df = penguins_df.dropna(subset=["body_mass_g", "species"])
+        data = filtered_data()
         sns.histplot(
-            data=df, 
-            x="body_mass_g", 
-            hue="species", 
-            multiple="layer", 
+            data=data,
+            x=input.selected_attribute(),  # or "body_mass_g" if you want it fixed
+            hue="species",
+            multiple="layer",
             bins=input.seaborn_bin_count()
         )
-        plt.title("Seaborn Histogram of Body Mass by Species")
-        plt.xlabel("Body Mass (g)")
+        plt.title(f"Seaborn Histogram of {input.selected_attribute()} by Species")
+        plt.xlabel(input.selected_attribute())
         plt.ylabel("Count")
         return plt.gcf()
-        
+
     @output
     @render_widget
     def plotly_scatterplot():
         fig = px.scatter(
-            penguins_df,
+            penguins_df.dropna(subset=["flipper_length_mm", "body_mass_g"]),
             x="flipper_length_mm",
             y="body_mass_g",
             color="species",
             title="Scatterplot: Flipper Length vs Body Mass"
         )
         return fig
+
 
 # Launch the app
 app = App(app_ui, server)
