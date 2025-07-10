@@ -31,7 +31,7 @@ app_ui = ui.page_fluid(
             ),
             ui.input_checkbox_group(
                 "selected_species_list",
-                "Selected Bin List",
+                "Selected Species List",
                 ["Adelie", "Gentoo", "Chinstrap"],
                 selected=["Adelie", "Gentoo", "Chinstrap"],
                 inline=True
@@ -49,7 +49,7 @@ app_ui = ui.page_fluid(
         ),
         ui.layout_columns(
             output_widget("plotly_histogram"),
-            ui.output_plot("seaborn_hist"),  # Optional: add seaborn plot
+            ui.output_plot("seaborn_hist"),
         ),
         ui.card(
             ui.card_header("Plotly Scatterplot: Species"),
@@ -62,31 +62,28 @@ app_ui = ui.page_fluid(
 # Define Server
 def server(input, output, session):
 
-# --------------------------------------------------------
-# Reactive calculations and effects
-# --------------------------------------------------------
-
-# Add a reactive calculation to filter the data
-# By decorating the function with @reactive, we can use the function to filter the data
-# The function will be called whenever an input functions used to generate that output changes.
-# Any output that depends on the reactive function (e.g., filtered_data()) will be updated when the data changes.
+    # --------------------------------------------------------
+    # Reactive calculation to filter the data
+    # --------------------------------------------------------
 
     @reactive.calc
     def filtered_data():
+        # Drop rows with NA in the selected attribute
         df = penguins_df.dropna(subset=[input.selected_attribute()])
+        # Filter by species selected
         df = df[df["species"].isin(input.selected_species_list())]
         return df
 
     @output
     @render.data_frame
     def penguin_data_table():
-        return render.DataTable(data=filtered_data())
+        return render.DataTable(filtered_data())
 
     @output
     @render.data_frame
     def penguin_data_grid():
-        return render.DataGrid(data=filtered_data())
-        
+        return render.DataGrid(filtered_data())
+
     @output
     @render_widget
     def plotly_histogram():
@@ -104,10 +101,9 @@ def server(input, output, session):
     @render.plot
     def seaborn_hist():
         plt.figure(figsize=(8, 4))
-        data = filtered_data()
         sns.histplot(
-            data=data,
-            x=input.selected_attribute(),  # or "body_mass_g" if you want it fixed
+            data=filtered_data(),
+            x=input.selected_attribute(),
             hue="species",
             multiple="layer",
             bins=input.seaborn_bin_count()
@@ -128,7 +124,6 @@ def server(input, output, session):
             title="Scatterplot: Flipper Length vs Body Mass"
         )
         return fig
-
 
 # Launch the app
 app = App(app_ui, server)
