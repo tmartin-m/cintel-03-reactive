@@ -116,12 +116,13 @@ def server(input, output, session):
     @output
     @render_widget
     def plotly_scatterplot():
+        df = penguins_df.dropna(subset=[input.selected_attribute(), "body_mass_g"])
         fig = px.scatter(
-            penguins_df.dropna(subset=["flipper_length_mm", "body_mass_g"]),
-            x="flipper_length_mm",
+            df,
+            x=input.selected_attribute(),
             y="body_mass_g",
             color="species",
-            title="Scatterplot: Flipper Length vs Body Mass"
+            title=f"Scatterplot: {input.selected_attribute()} vs Body Mass"
         )
         return fig
 
